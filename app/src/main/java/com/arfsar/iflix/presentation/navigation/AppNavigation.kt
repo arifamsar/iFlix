@@ -1,7 +1,9 @@
 package com.arfsar.iflix.presentation.navigation
 
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -36,9 +38,9 @@ fun AppNavigation() {
     IFlixScaffold(
         currentRoute = currentDestination,
         showBottomBar = showBottomBar,
-        showTopBar = showDetailTopBar,
+        showTopBar = false, // Disable default top bar for detail screen since we implement our own
         showBrandedAppBar = showBrandedAppBar,
-        title = if (showDetailTopBar) "Movie Details" else null,
+        title = null, // No title since we implement our own
         onNavigate = { destination ->
             navController.navigate(destination) {
                 // Pop up to home and save state to avoid building up a large back stack
@@ -73,7 +75,7 @@ fun AppNavigation() {
             }
             composable<Destinations.MovieDetails> {
                 MovieDetailsScreen(
-                    paddingValues = paddingValues,
+                    paddingValues = PaddingValues(0.dp),
                     onBackClick = { navController.navigateUp() }
                 )
             }
