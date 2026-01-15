@@ -19,6 +19,8 @@ import androidx.compose.foundation.shape.GenericShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -104,7 +106,9 @@ fun MovieDetailsScreen(
             CollapsibleImageScaffold(
                 title = movie.title,
                 backdropPath = movie.backdropPath,
+                isFavorite = movieDetailsState.isFavorite,
                 onBackClick = onBackClick,
+                onFavoriteClick = { viewModel.toggleFavorite() },
                 scrollState = scrollState
             ) { innerPadding ->
                 PullToRefreshContainer(
@@ -169,7 +173,9 @@ fun MovieDetailsScreen(
 fun CollapsibleImageScaffold(
     title: String,
     backdropPath: String,
+    isFavorite: Boolean,
     onBackClick: () -> Unit,
+    onFavoriteClick: () -> Unit,
     scrollState: ScrollState,
     modifier: Modifier = Modifier,
     content: @Composable (PaddingValues) -> Unit
@@ -336,12 +342,28 @@ fun CollapsibleImageScaffold(
                         )
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.Transparent,
-                    scrolledContainerColor = Color.Transparent
-                ),
-                windowInsets = WindowInsets.statusBars
-            )
-        }
-    }
-}
+                                colors = TopAppBarDefaults.topAppBarColors(
+                                    containerColor = Color.Transparent,
+                                    scrolledContainerColor = Color.Transparent
+                                ),
+                                actions = {
+                                    IconButton(
+                                        onClick = onFavoriteClick,
+                                        colors = IconButtonDefaults.iconButtonColors(
+                                            containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.5f * (1f - collapseProgress)),
+                                            contentColor = if (isFavorite) Color.Red else MaterialTheme.colorScheme.onSurface
+                                        )
+                                    ) {
+                                        Icon(
+                                            imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                                            contentDescription = if (isFavorite) "Remove from favorites" else "Add to favorites",
+                                            tint = if (isFavorite) Color.Red else MaterialTheme.colorScheme.onSurface
+                                        )
+                                    }
+                                },
+                                windowInsets = WindowInsets.statusBars
+                            )
+                        }
+                    }
+                }
+                

@@ -49,7 +49,13 @@ object DataModule {
         return Room.databaseBuilder(
             context,
             MovieDatabase::class.java, "movies.db"
-        ).build()
+        ).fallbackToDestructiveMigration()
+        .build()
+    }
+
+    @Provides
+    fun provideMovieDao(database: MovieDatabase): com.arfsar.core.source.local.room.MovieDao {
+        return database.movieDao()
     }
 
     @Provides

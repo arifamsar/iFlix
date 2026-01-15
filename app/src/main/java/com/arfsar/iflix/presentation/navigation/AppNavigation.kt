@@ -35,12 +35,19 @@ fun AppNavigation() {
     val showBrandedAppBar = isTopLevelDestination
     val showDetailTopBar = currentRoute?.contains("MovieDetails") == true
 
+    val appBarTitle = when (currentDestination) {
+        Destinations.Home -> "iFlix"
+        Destinations.Discover -> "Discover"
+        Destinations.Collections -> "My Collections"
+        else -> "iFlix"
+    }
+
     IFlixScaffold(
         currentRoute = currentDestination,
         showBottomBar = showBottomBar,
         showTopBar = false, // Disable default top bar for detail screen since we implement our own
         showBrandedAppBar = showBrandedAppBar,
-        title = null, // No title since we implement our own
+        title = appBarTitle,
         onNavigate = { destination ->
             navController.navigate(destination) {
                 // Pop up to home and save state to avoid building up a large back stack
@@ -70,7 +77,10 @@ fun AppNavigation() {
             }
             composable<Destinations.Collections> {
                 CollectionsScreen(
-                    paddingValues = paddingValues
+                    paddingValues = paddingValues,
+                    onMovieClick = { movieId ->
+                        navController.navigate(Destinations.MovieDetails(movieId))
+                    }
                 )
             }
             composable<Destinations.MovieDetails> {

@@ -33,7 +33,7 @@ fun IFlixScaffold(
         topBar = {
             when {
                 showBrandedAppBar -> {
-                    IFlixAppBar()
+                    IFlixAppBar(title = title ?: "iFlix")
                 }
                 showTopBar && title != null -> {
                     TopAppBar(

@@ -12,4 +12,7 @@ interface MovieRepository {
     fun getTopRatedMovies(): Flow<Result<PagingData<Movie>>>
     fun searchMovies(query: String): Flow<Result<PagingData<Movie>>>
     fun getMovieDetails(movieId: Int): Flow<Result<MovieDetails>>
+    fun getFavoriteMovies(): Flow<List<Movie>>
+    suspend fun setFavoriteMovie(movie: Movie, state: Boolean)
+    fun isMovieFavorite(movieId: Int): Flow<Boolean>
 }

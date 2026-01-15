@@ -44,9 +44,9 @@ data class MovieDetailsResponse(
     @SerialName("spoken_languages")
     val spokenLanguages: List<SpokenLanguageResponse> = emptyList(),
     @SerialName("homepage")
-    val homepage: String = "",
+    val homepage: String? = null,
     @SerialName("imdb_id")
-    val imdbId: String = ""
+    val imdbId: String? = null
 )
 
 @Serializable

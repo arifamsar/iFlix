@@ -11,8 +11,32 @@ import com.arfsar.core.model.MovieDetails
 import com.arfsar.core.model.ProductionCompany
 import com.arfsar.core.model.ProductionCountry
 import com.arfsar.core.model.SpokenLanguage
+import com.arfsar.core.source.local.entity.MovieEntity
 
 object DataMapper {
+    fun mapMovieToEntity(movie: Movie): MovieEntity {
+        return MovieEntity(
+            id = movie.id,
+            title = movie.title,
+            posterPath = movie.posterPath,
+            backdropPath = movie.backdropPath,
+            releaseDate = movie.releaseDate,
+            voteAverage = movie.voteAverage,
+            isFavorite = false
+        )
+    }
+
+    fun mapEntityToMovie(entity: MovieEntity): Movie {
+        return Movie(
+            id = entity.id,
+            title = entity.title,
+            posterPath = entity.posterPath,
+            backdropPath = entity.backdropPath,
+            releaseDate = entity.releaseDate,
+            voteAverage = entity.voteAverage
+        )
+    }
+
     fun mapMovieResultToMovie(movieResult: MovieResult): Movie {
         return Movie(
             id = movieResult.id,
@@ -51,8 +75,8 @@ object DataMapper {
             spokenLanguages = movieDetailsResponse.spokenLanguages.map {
                 mapSpokenLanguageResponseToSpokenLanguage(it)
             },
-            homepage = movieDetailsResponse.homepage,
-            imdbId = movieDetailsResponse.imdbId
+            homepage = movieDetailsResponse.homepage ?: "",
+            imdbId = movieDetailsResponse.imdbId ?: ""
         )
     }
 

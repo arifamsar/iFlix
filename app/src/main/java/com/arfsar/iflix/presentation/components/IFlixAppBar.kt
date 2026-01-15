@@ -21,27 +21,38 @@ import com.arfsar.iflix.ui.theme.IFlixRed
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun IFlixAppBar(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    title: String = "iFlix"
 ) {
     TopAppBar(
         title = {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(start = 8.dp)
-            ) {
+            if (title == "iFlix") {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(start = 8.dp)
+                ) {
+                    Text(
+                        text = "i",
+                        fontSize = 28.sp,
+                        fontWeight = FontWeight.Black,
+                        color = IFlixRed,
+                        letterSpacing = (-1).sp
+                    )
+                    Text(
+                        text = "Flix",
+                        fontSize = 28.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onBackground,
+                        letterSpacing = 0.sp
+                    )
+                }
+            } else {
                 Text(
-                    text = "i",
-                    fontSize = 28.sp,
-                    fontWeight = FontWeight.Black,
-                    color = IFlixRed,
-                    letterSpacing = (-1).sp
-                )
-                Text(
-                    text = "Flix",
-                    fontSize = 28.sp,
+                    text = title,
+                    fontSize = 24.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onBackground,
-                    letterSpacing = 0.sp
+                    modifier = Modifier.padding(start = 8.dp)
                 )
             }
         },

@@ -55,7 +55,14 @@ dependencies {
     api(libs.androidx.paging.runtime)
     api(libs.androidx.paging.compose)
     implementation(libs.kotlinx.coroutines.core)
+    implementation(libs.androidx.junit.ktx)
     ksp(libs.hilt.android.compiler)
     ksp(libs.androidx.room.compiler)
     implementation("javax.inject:javax.inject:1")
+
+    testImplementation(libs.junit)
+    androidTestImplementation(libs.androidx.junit)
+    androidTestImplementation(libs.androidx.espresso.core)
+    androidTestImplementation(libs.androidx.core)
+    androidTestImplementation(libs.androidx.runner)
 }

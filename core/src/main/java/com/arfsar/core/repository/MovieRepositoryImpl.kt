@@ -3,6 +3,7 @@ package com.arfsar.core.repository
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
+import com.arfsar.core.source.local.room.MovieDao
 import com.arfsar.core.source.remote.MoviePagingSource
 import com.arfsar.core.source.remote.network.ApiService
 import com.arfsar.core.utils.DataMapper
@@ -15,7 +16,10 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class MovieRepositoryImpl @Inject constructor(private val apiService: ApiService) : MovieRepository {
+class MovieRepositoryImpl @Inject constructor(
+    private val apiService: ApiService,
+    private val movieDao: MovieDao
+) : MovieRepository {
     override fun getTrendingMovies(): Flow<Result<PagingData<Movie>>> {
         return try {
             Pager(
@@ -78,5 +82,21 @@ class MovieRepositoryImpl @Inject constructor(private val apiService: ApiService
         } catch (e: Exception) {
             emit(Result.failure(e))
         }
+    }
+
+    override fun getFavoriteMovies(): Flow<List<Movie>> {
+        return movieDao.getFavoriteMovies().map { entities ->
+            entities.map { DataMapper.mapEntityToMovie(it) }
+        }
+    }
+
+    override suspend fun setFavoriteMovie(movie: Movie, state: Boolean) {
+        val entity = DataMapper.mapMovieToEntity(movie)
+        entity.isFavorite = state
+        movieDao.insertMovie(entity)
+    }
+
+    override fun isMovieFavorite(movieId: Int): Flow<Boolean> {
+        return movieDao.isMovieFavorite(movieId)
     }
 }
