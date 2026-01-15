@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import com.arfsar.core.model.Movie
+import com.arfsar.core.usecase.GetNowPlayingMoviesUseCase
 import com.arfsar.core.usecase.GetPopularMoviesUseCase
 import com.arfsar.core.usecase.GetTopRatedMoviesUseCase
 import com.arfsar.core.usecase.GetTrendingMoviesUseCase
@@ -18,6 +19,13 @@ import kotlinx.coroutines.flow.onEach
 import javax.inject.Inject
 
 data class TrendingMoviesState(
+    val movies: List<Movie> = emptyList(),
+    val isLoading: Boolean = false,
+    val isRefreshing: Boolean = false,
+    val error: String? = null
+)
+
+data class NowPlayingMoviesState(
     val movies: List<Movie> = emptyList(),
     val isLoading: Boolean = false,
     val error: String? = null
@@ -35,13 +43,17 @@ data class TopRatedMoviesState(
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
-    getTrendingMoviesUseCase: GetTrendingMoviesUseCase,
+    private val getTrendingMoviesUseCase: GetTrendingMoviesUseCase,
+    private val getNowPlayingMoviesUseCase: GetNowPlayingMoviesUseCase,
     getPopularMoviesUseCase: GetPopularMoviesUseCase,
     getTopRatedMoviesUseCase: GetTopRatedMoviesUseCase
 ) : ViewModel() {
 
     private val _trendingMoviesState = MutableStateFlow(TrendingMoviesState())
     val trendingMoviesState = _trendingMoviesState.asStateFlow()
+
+    private val _nowPlayingMoviesState = MutableStateFlow(NowPlayingMoviesState())
+    val nowPlayingMoviesState = _nowPlayingMoviesState.asStateFlow()
 
     private val _popularMoviesState = MutableStateFlow(PopularMoviesState())
     val popularMoviesState = _popularMoviesState.asStateFlow()
@@ -73,12 +85,33 @@ class HomeViewModel @Inject constructor(
         .cachedIn(viewModelScope)
 
     init {
+        loadTrendingMovies()
+        loadNowPlayingMovies()
+    }
+
+    private fun loadTrendingMovies() {
         getTrendingMoviesUseCase().onEach { result ->
             result.onSuccess { movies ->
-                _trendingMoviesState.value = TrendingMoviesState(movies = movies, isLoading = false)
+                _trendingMoviesState.value = TrendingMoviesState(movies = movies, isLoading = false, isRefreshing = false)
             }.onFailure { error ->
-                _trendingMoviesState.value = TrendingMoviesState(error = error.message)
+                _trendingMoviesState.value = TrendingMoviesState(error = error.message, isLoading = false, isRefreshing = false)
             }
         }.launchIn(viewModelScope)
+    }
+
+    private fun loadNowPlayingMovies() {
+        getNowPlayingMoviesUseCase().onEach { result ->
+            result.onSuccess { movies ->
+                _nowPlayingMoviesState.value = NowPlayingMoviesState(movies = movies, isLoading = false)
+            }.onFailure { error ->
+                _nowPlayingMoviesState.value = NowPlayingMoviesState(error = error.message, isLoading = false)
+            }
+        }.launchIn(viewModelScope)
+    }
+
+    fun refresh() {
+        _trendingMoviesState.value = _trendingMoviesState.value.copy(isRefreshing = true)
+        loadTrendingMovies()
+        loadNowPlayingMovies()
     }
 }

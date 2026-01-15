@@ -38,4 +38,10 @@ interface ApiService {
         @Query("language") language: String = "en-US"
     ): MovieDetailsResponse
 
+    @GET("movie/now_playing")
+    suspend fun getNowPlayingMovies(
+        @Query("language") language: String = "en-US",
+        @Query("page") page: Int = 1
+    ): MovieResponse
+
 }

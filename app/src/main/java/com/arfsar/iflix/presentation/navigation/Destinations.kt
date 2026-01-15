@@ -11,5 +11,8 @@ sealed class Destinations {
     data object Discover : Destinations()
 
     @Serializable
+    data object Collections : Destinations()
+
+    @Serializable
     data class MovieDetails(val movieId: Int) : Destinations()
 }

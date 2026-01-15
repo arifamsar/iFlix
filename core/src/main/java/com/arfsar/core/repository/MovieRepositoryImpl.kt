@@ -25,6 +25,15 @@ class MovieRepositoryImpl @Inject constructor(private val apiService: ApiService
         }
     }
 
+    override fun getNowPlayingMovies(): Flow<Result<List<Movie>>> = flow {
+        try {
+            val response = apiService.getNowPlayingMovies()
+            emit(Result.success(response.results.map { DataMapper.mapMovieResultToMovie(it) }))
+        } catch (e: Exception) {
+            emit(Result.failure(e))
+        }
+    }
+
     override fun getPopularMovies(): Flow<Result<PagingData<Movie>>> {
         return try {
             Pager(

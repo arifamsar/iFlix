@@ -2,15 +2,21 @@ package com.arfsar.iflix.presentation.search
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -18,6 +24,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -29,6 +36,7 @@ import com.arfsar.iflix.presentation.navigation.Destinations
 @Composable
 fun SearchScreen(
     navController: NavController,
+    paddingValues: PaddingValues,
     viewModel: SearchViewModel = hiltViewModel()
 ) {
     val searchResults = viewModel.searchResults.collectAsLazyPagingItems()
@@ -38,6 +46,7 @@ fun SearchScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .padding(paddingValues)
             .padding(16.dp)
     ) {
         TextField(
@@ -47,7 +56,20 @@ fun SearchScreen(
                 viewModel.searchMovies(it)
             },
             label = { Text("Search for movies") },
-            modifier = Modifier.fillMaxWidth()
+            leadingIcon = {
+                Icon(
+                    imageVector = Icons.Default.Search,
+                    contentDescription = "Search"
+                )
+            },
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(12.dp),
+            colors = TextFieldDefaults.colors(
+                focusedIndicatorColor = Color.Transparent,
+                unfocusedIndicatorColor = Color.Transparent,
+                disabledIndicatorColor = Color.Transparent
+            ),
+            singleLine = true
         )
 
         when {
@@ -83,7 +105,11 @@ fun SearchScreen(
                         .padding(top = 16.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(text = "Enter a search query")
+                    Text(
+                        text = "Enter a search query",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
             }
 

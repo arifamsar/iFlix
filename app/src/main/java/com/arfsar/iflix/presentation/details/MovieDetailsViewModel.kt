@@ -17,6 +17,7 @@ import javax.inject.Inject
 data class MovieDetailsState(
     val movieDetails: MovieDetails? = null,
     val isLoading: Boolean = false,
+    val isRefreshing: Boolean = false,
     val error: String? = null
 )
 
@@ -29,14 +30,24 @@ class MovieDetailsViewModel @Inject constructor(
     private val _movieDetailsState = MutableStateFlow(MovieDetailsState(isLoading = true))
     val movieDetailsState = _movieDetailsState.asStateFlow()
 
+    private val movieId = savedStateHandle.toRoute<Destinations.MovieDetails>().movieId
+
     init {
-        val movieId = savedStateHandle.toRoute<Destinations.MovieDetails>().movieId
+        loadMovieDetails()
+    }
+
+    private fun loadMovieDetails() {
         getMovieDetailsUseCase(movieId).onEach { result ->
             result.onSuccess { movieDetails ->
-                _movieDetailsState.value = MovieDetailsState(movieDetails = movieDetails, isLoading = false)
+                _movieDetailsState.value = MovieDetailsState(movieDetails = movieDetails, isLoading = false, isRefreshing = false)
             }.onFailure { error ->
-                _movieDetailsState.value = MovieDetailsState(error = error.message, isLoading = false)
+                _movieDetailsState.value = MovieDetailsState(error = error.message, isLoading = false, isRefreshing = false)
             }
         }.launchIn(viewModelScope)
+    }
+
+    fun refresh() {
+        _movieDetailsState.value = _movieDetailsState.value.copy(isRefreshing = true)
+        loadMovieDetails()
     }
 }
