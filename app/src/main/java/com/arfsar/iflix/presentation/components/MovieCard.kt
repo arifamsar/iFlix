@@ -146,6 +146,7 @@ private fun MovieCardPrev() {
                 title = "The Shawshank Redemption",
                 posterPath = "/q6y0Go1tsGEsmtFryDOJo3dEmqu.jpg",
                 voteAverage = 8.7,
+                backdropPath = "",
                 releaseDate = "1994-09-23",
             ),
             onMovieClick = {}

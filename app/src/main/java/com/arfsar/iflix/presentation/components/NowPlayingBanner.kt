@@ -2,9 +2,9 @@ package com.arfsar.iflix.presentation.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -12,15 +12,19 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -30,12 +34,12 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.arfsar.core.model.Movie
+import kotlinx.coroutines.delay
 import java.util.Locale
 
 @Composable
@@ -44,161 +48,145 @@ fun NowPlayingBanner(
     modifier: Modifier = Modifier,
     onMovieClick: (Int) -> Unit
 ) {
-    Column(modifier = modifier) {
-        Text(
-            text = "Now Playing",
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-        )
-        LazyRow(
-            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
-        ) {
-            items(movies) { movie ->
-                NowPlayingBannerCard(
-                    movie = movie,
-                    onMovieClick = onMovieClick,
-                    modifier = Modifier.padding(end = 12.dp)
-                )
-            }
+    if (movies.isEmpty()) return
+
+    val pagerState = rememberPagerState(pageCount = { movies.size })
+
+    // Auto-scroll effect
+    LaunchedEffect(pagerState) {
+        while (true) {
+            delay(5000) // Auto-scroll every 5 seconds
+            val nextPage = (pagerState.currentPage + 1) % movies.size
+            pagerState.animateScrollToPage(nextPage)
         }
     }
-}
 
-@Composable
-fun NowPlayingBannerCard(
-    movie: Movie,
-    modifier: Modifier = Modifier,
-    onMovieClick: (Int) -> Unit
-) {
-    Box(
-        modifier = modifier
-            .width(300.dp)
-            .height(170.dp)
-            .clip(RoundedCornerShape(16.dp))
-            .clickable { onMovieClick(movie.id) }
-    ) {
-        // Full-width banner image (1920x1080 aspect ratio)
-        AsyncImage(
-            model = ImageRequest.Builder(LocalContext.current)
-                .data("https://image.tmdb.org/t/p/w1280${movie.posterPath}")
-                .crossfade(true)
-                .build(),
-            contentDescription = movie.title,
-            contentScale = ContentScale.Crop,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(170.dp)
-                .clip(RoundedCornerShape(16.dp))
-        )
-
-        // Dark gradient overlay for text readability
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(170.dp)
-                .background(
-                    brush = Brush.horizontalGradient(
-                        colors = listOf(
-                            Color.Black.copy(alpha = 0.7f),
-                            Color.Black.copy(alpha = 0.5f),
-                            Color.Transparent
-                        ),
-                        startX = 0f,
-                        endX = 400f
-                    )
-                )
-        )
-
-        // Content overlay
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(170.dp),
-            contentAlignment = Alignment.BottomStart
-        ) {
-            Column(
+    Column(modifier = modifier) {
+        Box {
+            HorizontalPager(
+                state = pagerState,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(12.dp),
-                verticalArrangement = androidx.compose.foundation.layout.Arrangement.Bottom
-            ) {
-                // Movie title
-                Text(
-                    text = movie.title,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                    color = Color.White
+                    .height(240.dp)
+            ) { page ->
+                BannerItem(
+                    movie = movies[page],
+                    onMovieClick = onMovieClick
                 )
+            }
 
-                Spacer(modifier = Modifier.height(4.dp))
-
-                // Rating and year info
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.padding(bottom = 2.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.Star,
-                        contentDescription = "Rating",
-                        tint = Color.Yellow,
-                        modifier = Modifier.size(14.dp)
-                    )
-
-                    Text(
-                        text = String.format(Locale.US, "%.1f", movie.voteAverage),
-                        color = Color.White,
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(start = 4.dp)
-                    )
-
-                    Spacer(modifier = Modifier.width(8.dp))
-
-                    Text(
-                        text = movie.releaseDate.take(4),
-                        color = Color.White.copy(alpha = 0.8f),
-                        fontSize = 11.sp
+            // Page indicator positioned at bottom
+            Row(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 16.dp),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                repeat(movies.size) { iteration ->
+                    val color = if (pagerState.currentPage == iteration) {
+                        MaterialTheme.colorScheme.primary
+                    } else {
+                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+                    }
+                    Box(
+                        modifier = Modifier
+                            .padding(4.dp)
+                            .size(8.dp)
+                            .clip(CircleShape)
+                            .background(color)
                     )
                 }
             }
+        }
+    }
+}
 
-            // Play button in the corner
+@Composable
+private fun BannerItem(
+    movie: Movie,
+    onMovieClick: (Int) -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(240.dp)
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .clickable { onMovieClick(movie.id) },
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+    ) {
+        Box {
+            // Backdrop image (1920x1080 resolution)
+            AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data("https://image.tmdb.org/t/p/original${movie.backdropPath}")
+                    .crossfade(true)
+                    .build(),
+                contentDescription = movie.title,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            // Gradient overlay
             Box(
                 modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(8.dp)
-                    .size(36.dp)
+                    .fillMaxWidth()
+                    .height(240.dp)
                     .background(
-                        color = Color.White.copy(alpha = 0.9f),
-                        shape = RoundedCornerShape(50)
-                    ),
-                contentAlignment = Alignment.Center
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                Color.Transparent,
+                                Color.Black.copy(alpha = 0.5f),
+                                Color.Black.copy(alpha = 0.8f)
+                            ),
+                            startY = 0f,
+                            endY = 800f
+                        )
+                    )
+            )
+
+            // Movie info
+            Column(
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .padding(16.dp)
             ) {
-                Icon(
-                    imageVector = Icons.Filled.PlayArrow,
-                    contentDescription = "Play",
-                    tint = Color.Black,
-                    modifier = Modifier.size(20.dp)
+                Text(
+                    text = movie.title,
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
                 )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Star,
+                        contentDescription = "Rating",
+                        tint = Color(0xFFFFD700),
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = String.format(Locale.getDefault(), "%.1f", movie.voteAverage),
+                        fontSize = 14.sp,
+                        color = Color.White,
+                        fontWeight = FontWeight.Medium
+                    )
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Text(
+                        text = movie.releaseDate.take(4),
+                        fontSize = 14.sp,
+                        color = Color.White.copy(alpha = 0.8f)
+                    )
+                }
             }
         }
     }
 }
 
-@Preview
-@Composable
-private fun NowPlayingBannerPrev() {
-    NowPlayingBannerCard(
-        movie = Movie(
-            id = 1,
-            title = "Sample Movie Title",
-            posterPath = "/samplePosterPath.jpg",
-            voteAverage = 8.5,
-            releaseDate = "2023-09-15"
-        ),
-        onMovieClick = { }
-    )
-}

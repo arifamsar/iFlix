@@ -28,7 +28,10 @@ class MovieRepositoryImpl @Inject constructor(private val apiService: ApiService
     override fun getNowPlayingMovies(): Flow<Result<List<Movie>>> = flow {
         try {
             val response = apiService.getNowPlayingMovies()
-            emit(Result.success(response.results.map { DataMapper.mapMovieResultToMovie(it) }))
+            val limitedMovies = response.results
+                .map { DataMapper.mapMovieResultToMovie(it) }
+                .take(5) // Limit to 5 movies
+            emit(Result.success(limitedMovies))
         } catch (e: Exception) {
             emit(Result.failure(e))
         }

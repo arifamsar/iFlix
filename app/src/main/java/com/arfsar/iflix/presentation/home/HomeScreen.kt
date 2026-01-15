@@ -20,7 +20,9 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.paging.compose.collectAsLazyPagingItems
+import com.arfsar.iflix.presentation.components.BannerShimmer
 import com.arfsar.iflix.presentation.components.MovieCarousel
+import com.arfsar.iflix.presentation.components.MovieCarouselShimmer
 import com.arfsar.iflix.presentation.components.NowPlayingBanner
 import com.arfsar.iflix.presentation.components.PullToRefreshContainer
 import com.arfsar.iflix.presentation.navigation.Destinations
@@ -54,14 +56,7 @@ fun HomeScreen(
             // Now Playing Movies Section
             when {
                 nowPlayingMoviesState.isLoading -> {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator()
-                    }
+                    BannerShimmer()
                 }
 
                 nowPlayingMoviesState.error != null -> {
@@ -91,14 +86,7 @@ fun HomeScreen(
             // Trending Movies Section
             when {
                 trendingMoviesState.isLoading -> {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator()
-                    }
+                    MovieCarouselShimmer(title = "Trending")
                 }
 
                 trendingMoviesState.error != null -> {

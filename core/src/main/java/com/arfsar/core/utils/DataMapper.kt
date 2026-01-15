@@ -12,6 +12,7 @@ object DataMapper {
             id = movieResult.id,
             title = movieResult.title,
             posterPath = movieResult.posterPath ?: "",
+            backdropPath = movieResult.backdropPath ?: "",
             releaseDate = movieResult.releaseDate ?: "",
             voteAverage = movieResult.voteAverage ?: 0.0
         )
