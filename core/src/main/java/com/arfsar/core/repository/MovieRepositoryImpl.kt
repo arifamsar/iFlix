@@ -16,24 +16,25 @@ import javax.inject.Singleton
 
 @Singleton
 class MovieRepositoryImpl @Inject constructor(private val apiService: ApiService) : MovieRepository {
-    override fun getTrendingMovies(): Flow<Result<List<Movie>>> = flow {
-        try {
-            val response = apiService.getTrendingMovies()
-            emit(Result.success(response.results.map { DataMapper.mapMovieResultToMovie(it) }))
+    override fun getTrendingMovies(): Flow<Result<PagingData<Movie>>> {
+        return try {
+            Pager(
+                config = PagingConfig(pageSize = 20, enablePlaceholders = false),
+                pagingSourceFactory = { MoviePagingSource(apiService, "trending") }
+            ).flow.map { pagingData -> Result.success(pagingData) }
         } catch (e: Exception) {
-            emit(Result.failure(e))
+            flow { emit(Result.failure(e)) }
         }
     }
 
-    override fun getNowPlayingMovies(): Flow<Result<List<Movie>>> = flow {
-        try {
-            val response = apiService.getNowPlayingMovies()
-            val limitedMovies = response.results
-                .map { DataMapper.mapMovieResultToMovie(it) }
-                .take(5) // Limit to 5 movies
-            emit(Result.success(limitedMovies))
+    override fun getNowPlayingMovies(): Flow<Result<PagingData<Movie>>> {
+        return try {
+            Pager(
+                config = PagingConfig(pageSize = 5, enablePlaceholders = true),
+                pagingSourceFactory = { MoviePagingSource(apiService, "now_playing") }
+            ).flow.map { pagingData -> Result.success(pagingData) }
         } catch (e: Exception) {
-            emit(Result.failure(e))
+            flow { emit(Result.failure(e)) }
         }
     }
 

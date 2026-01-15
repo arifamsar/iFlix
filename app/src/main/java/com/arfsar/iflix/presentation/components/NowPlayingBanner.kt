@@ -25,6 +25,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -36,6 +39,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.paging.LoadState
+import androidx.paging.compose.LazyPagingItems
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.arfsar.core.model.Movie
@@ -44,19 +49,22 @@ import java.util.Locale
 
 @Composable
 fun NowPlayingBanner(
-    movies: List<Movie>,
+    movies: LazyPagingItems<Movie>,
     modifier: Modifier = Modifier,
-    onMovieClick: (Int) -> Unit
+    onMovieClick: (Int) -> Unit,
+    maxItems: Int = 5
 ) {
-    if (movies.isEmpty()) return
+    val itemCount by remember(movies) { derivedStateOf { minOf(movies.itemCount, maxItems) } }
 
-    val pagerState = rememberPagerState(pageCount = { movies.size })
+    if (itemCount == 0) return
+
+    val pagerState = rememberPagerState(pageCount = { itemCount })
 
     // Auto-scroll effect
     LaunchedEffect(pagerState) {
         while (true) {
             delay(5000) // Auto-scroll every 5 seconds
-            val nextPage = (pagerState.currentPage + 1) % movies.size
+            val nextPage = (pagerState.currentPage + 1) % itemCount
             pagerState.animateScrollToPage(nextPage)
         }
     }
@@ -69,10 +77,13 @@ fun NowPlayingBanner(
                     .fillMaxWidth()
                     .height(240.dp)
             ) { page ->
-                BannerItem(
-                    movie = movies[page],
-                    onMovieClick = onMovieClick
-                )
+                val movie = movies[page]
+                if (movie != null) {
+                    BannerItem(
+                        movie = movie,
+                        onMovieClick = onMovieClick
+                    )
+                }
             }
 
             // Page indicator positioned at bottom
@@ -82,7 +93,7 @@ fun NowPlayingBanner(
                     .padding(bottom = 16.dp),
                 horizontalArrangement = Arrangement.Center
             ) {
-                repeat(movies.size) { iteration ->
+                repeat(itemCount) { iteration ->
                     val color = if (pagerState.currentPage == iteration) {
                         MaterialTheme.colorScheme.primary
                     } else {
@@ -188,5 +199,12 @@ private fun BannerItem(
             }
         }
     }
+}
+
+@Composable
+fun NowPlayingBannerShimmer(
+    modifier: Modifier = Modifier
+) {
+    SkeletonNowPlayingBanner(modifier = modifier)
 }
 

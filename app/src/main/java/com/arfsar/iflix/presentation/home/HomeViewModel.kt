@@ -10,108 +10,126 @@ import com.arfsar.core.usecase.GetPopularMoviesUseCase
 import com.arfsar.core.usecase.GetTopRatedMoviesUseCase
 import com.arfsar.core.usecase.GetTrendingMoviesUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.launch
 import javax.inject.Inject
-
-data class TrendingMoviesState(
-    val movies: List<Movie> = emptyList(),
-    val isLoading: Boolean = false,
-    val isRefreshing: Boolean = false,
-    val error: String? = null
-)
-
-data class NowPlayingMoviesState(
-    val movies: List<Movie> = emptyList(),
-    val isLoading: Boolean = false,
-    val error: String? = null
-)
-
-data class PopularMoviesState(
-    val isLoading: Boolean = false,
-    val error: String? = null
-)
-
-data class TopRatedMoviesState(
-    val isLoading: Boolean = false,
-    val error: String? = null
-)
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val getTrendingMoviesUseCase: GetTrendingMoviesUseCase,
     private val getNowPlayingMoviesUseCase: GetNowPlayingMoviesUseCase,
-    getPopularMoviesUseCase: GetPopularMoviesUseCase,
-    getTopRatedMoviesUseCase: GetTopRatedMoviesUseCase
+    private val getPopularMoviesUseCase: GetPopularMoviesUseCase,
+    private val getTopRatedMoviesUseCase: GetTopRatedMoviesUseCase
 ) : ViewModel() {
 
-    private val _trendingMoviesState = MutableStateFlow(TrendingMoviesState())
-    val trendingMoviesState = _trendingMoviesState.asStateFlow()
+    private val _uiState = MutableStateFlow(HomeContract.State())
+    val uiState: StateFlow<HomeContract.State> = _uiState.asStateFlow()
 
-    private val _nowPlayingMoviesState = MutableStateFlow(NowPlayingMoviesState())
-    val nowPlayingMoviesState = _nowPlayingMoviesState.asStateFlow()
+    private val _event = Channel<HomeContract.Event>()
+    val event: Flow<HomeContract.Event> = _event.receiveAsFlow()
 
-    private val _popularMoviesState = MutableStateFlow(PopularMoviesState())
-    val popularMoviesState = _popularMoviesState.asStateFlow()
-
-    private val _topRatedMoviesState = MutableStateFlow(TopRatedMoviesState())
-    val topRatedMoviesState = _topRatedMoviesState.asStateFlow()
-
-    // Unwrap Result and expose only PagingData for paging composables
-    val popularMovies: Flow<PagingData<Movie>> = getPopularMoviesUseCase()
+    // For paging data - all sections now use paging
+    val trendingMovies = getTrendingMoviesUseCase()
         .map { result ->
             result.onSuccess {
-                _popularMoviesState.value = PopularMoviesState(isLoading = false)
+                updateState { copy(trendingMoviesLoading = false, trendingMoviesError = null) }
             }.onFailure { error ->
-                _popularMoviesState.value = PopularMoviesState(error = error.message)
+                updateState { copy(trendingMoviesLoading = false, trendingMoviesError = error.message) }
             }
             result.getOrNull() ?: PagingData.empty()
         }
         .cachedIn(viewModelScope)
 
-    val topRatedMovies: Flow<PagingData<Movie>> = getTopRatedMoviesUseCase()
+    val nowPlayingMovies = getNowPlayingMoviesUseCase()
         .map { result ->
             result.onSuccess {
-                _topRatedMoviesState.value = TopRatedMoviesState(isLoading = false)
+                updateState { copy(nowPlayingMoviesLoading = false, nowPlayingMoviesError = null) }
             }.onFailure { error ->
-                _topRatedMoviesState.value = TopRatedMoviesState(error = error.message)
+                updateState { copy(nowPlayingMoviesLoading = false, nowPlayingMoviesError = error.message) }
+            }
+            result.getOrNull() ?: PagingData.empty()
+        }
+        .cachedIn(viewModelScope)
+
+    val popularMovies = getPopularMoviesUseCase()
+        .map { result ->
+            result.onSuccess {
+                updateState { copy(popularMoviesLoading = false, popularMoviesError = null) }
+            }.onFailure { error ->
+                updateState { copy(popularMoviesLoading = false, popularMoviesError = error.message) }
+            }
+            result.getOrNull() ?: PagingData.empty()
+        }
+        .cachedIn(viewModelScope)
+
+    val topRatedMovies = getTopRatedMoviesUseCase()
+        .map { result ->
+            result.onSuccess {
+                updateState { copy(topRatedMoviesLoading = false, topRatedMoviesError = null) }
+            }.onFailure { error ->
+                updateState { copy(topRatedMoviesLoading = false, topRatedMoviesError = error.message) }
             }
             result.getOrNull() ?: PagingData.empty()
         }
         .cachedIn(viewModelScope)
 
     init {
-        loadTrendingMovies()
-        loadNowPlayingMovies()
+        // Loading states are managed by paging's loadState
+    }
+
+    fun accept(action: HomeContract.Action) {
+        when (action) {
+            is HomeContract.Action.Refresh -> refresh()
+            is HomeContract.Action.LoadTrendingMovies -> loadTrendingMovies()
+            is HomeContract.Action.LoadNowPlayingMovies -> loadNowPlayingMovies()
+            is HomeContract.Action.LoadPopularMovies -> loadPopularMovies()
+            is HomeContract.Action.LoadTopRatedMovies -> loadTopRatedMovies()
+            is HomeContract.Action.NavigateToMovieDetail -> navigateToMovieDetail(action.movieId)
+        }
+    }
+
+    private fun updateState(update: HomeContract.State.() -> HomeContract.State) {
+        _uiState.value = _uiState.value.update()
     }
 
     private fun loadTrendingMovies() {
-        getTrendingMoviesUseCase().onEach { result ->
-            result.onSuccess { movies ->
-                _trendingMoviesState.value = TrendingMoviesState(movies = movies, isLoading = false, isRefreshing = false)
-            }.onFailure { error ->
-                _trendingMoviesState.value = TrendingMoviesState(error = error.message, isLoading = false, isRefreshing = false)
-            }
-        }.launchIn(viewModelScope)
+        updateState { copy(trendingMoviesLoading = true, trendingMoviesError = null) }
     }
 
     private fun loadNowPlayingMovies() {
-        getNowPlayingMoviesUseCase().onEach { result ->
-            result.onSuccess { movies ->
-                _nowPlayingMoviesState.value = NowPlayingMoviesState(movies = movies, isLoading = false)
-            }.onFailure { error ->
-                _nowPlayingMoviesState.value = NowPlayingMoviesState(error = error.message, isLoading = false)
-            }
-        }.launchIn(viewModelScope)
+        updateState { copy(nowPlayingMoviesLoading = true, nowPlayingMoviesError = null) }
     }
 
-    fun refresh() {
-        _trendingMoviesState.value = _trendingMoviesState.value.copy(isRefreshing = true)
-        loadTrendingMovies()
-        loadNowPlayingMovies()
+    private fun loadPopularMovies() {
+        updateState { copy(popularMoviesLoading = true, popularMoviesError = null) }
+    }
+
+    private fun loadTopRatedMovies() {
+        updateState { copy(topRatedMoviesLoading = true, topRatedMoviesError = null) }
+    }
+
+    private fun refresh() {
+        // The isRefreshing state is only used as a flag for pull-to-refresh UI
+        // The actual loading is managed by paging's loadState
+        updateState { copy(isRefreshing = true) }
+
+        viewModelScope.launch {
+            // Brief delay to allow the UI to register the refresh gesture
+            kotlinx.coroutines.delay(100)
+            updateState { copy(isRefreshing = false) }
+            _event.trySend(HomeContract.Event.RefreshComplete)
+        }
+    }
+
+    private fun navigateToMovieDetail(movieId: Int) {
+        viewModelScope.launch {
+            _event.trySend(HomeContract.Event.NavigateToMovieDetail(movieId))
+        }
     }
 }

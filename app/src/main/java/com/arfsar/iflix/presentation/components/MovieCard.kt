@@ -39,6 +39,8 @@ import com.arfsar.iflix.ui.theme.CardBackground
 import com.arfsar.iflix.ui.theme.IFlixTheme
 import java.util.Locale
 
+import com.arfsar.iflix.presentation.components.SkeletonMovieCard
+
 @Composable
 fun MovieCard(
     movie: Movie,
@@ -152,4 +154,11 @@ private fun MovieCardPrev() {
             onMovieClick = {}
         )
     }
+}
+
+@Composable
+fun MovieCardShimmer(
+    modifier: Modifier = Modifier
+) {
+    SkeletonMovieCard(modifier = modifier)
 }

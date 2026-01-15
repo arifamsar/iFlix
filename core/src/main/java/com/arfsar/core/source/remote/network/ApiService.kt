@@ -10,7 +10,8 @@ interface ApiService {
 
     @GET("trending/movie/day")
     suspend fun getTrendingMovies(
-        @Query("language") language: String = "en-US"
+        @Query("language") language: String = "en-US",
+        @Query("page") page: Int = 1
     ): MovieResponse
 
     @GET("movie/popular")
