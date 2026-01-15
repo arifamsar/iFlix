@@ -1,5 +1,6 @@
 package com.arfsar.core.source.remote.network
 
+import com.arfsar.core.source.remote.response.GenresListResponse
 import com.arfsar.core.source.remote.response.MovieDetailsResponse
 import com.arfsar.core.source.remote.response.MovieResponse
 import retrofit2.http.GET
@@ -45,4 +46,15 @@ interface ApiService {
         @Query("page") page: Int = 1
     ): MovieResponse
 
+    @GET("discover/movie")
+    suspend fun discoverMovies(
+        @Query("with_genres") genreId: String,
+        @Query("language") language: String = "en-US",
+        @Query("page") page: Int = 1
+    ): MovieResponse
+
+    @GET("genre/movie/list")
+    suspend fun getMovieGenres(
+        @Query("language") language: String = "en-US"
+    ): GenresListResponse
 }

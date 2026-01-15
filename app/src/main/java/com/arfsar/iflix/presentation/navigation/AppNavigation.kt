@@ -12,6 +12,7 @@ import com.arfsar.iflix.presentation.collections.CollectionsScreen
 import com.arfsar.iflix.presentation.components.IFlixScaffold
 import com.arfsar.iflix.presentation.details.MovieDetailsScreen
 import com.arfsar.iflix.presentation.home.HomeScreen
+import com.arfsar.iflix.presentation.search.SearchResultScreen
 import com.arfsar.iflix.presentation.search.SearchScreen
 
 @Composable
@@ -26,6 +27,7 @@ fun AppNavigation() {
         currentRoute?.contains("Discover") == true -> Destinations.Discover
         currentRoute?.contains("Collections") == true -> Destinations.Collections
         currentRoute?.contains("MovieDetails") == true -> null // Hide bottom bar on details
+        currentRoute?.contains("SearchResult") == true -> null
         else -> Destinations.Home
     }
 
@@ -86,6 +88,14 @@ fun AppNavigation() {
             composable<Destinations.MovieDetails> {
                 MovieDetailsScreen(
                     paddingValues = PaddingValues(0.dp),
+                    onBackClick = { navController.navigateUp() }
+                )
+            }
+            composable<Destinations.SearchResult> {
+                SearchResultScreen(
+                    onMovieClick = { movieId ->
+                        navController.navigate(Destinations.MovieDetails(movieId))
+                    },
                     onBackClick = { navController.navigateUp() }
                 )
             }

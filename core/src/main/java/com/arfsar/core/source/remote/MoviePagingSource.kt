@@ -21,6 +21,7 @@ class MoviePagingSource(
                 "trending" -> apiService.getTrendingMovies(page = page)
                 "now_playing" -> apiService.getNowPlayingMovies(page = page)
                 "search" -> apiService.searchMovies(query = query ?: "", page = page)
+                "discover" -> apiService.discoverMovies(genreId = query ?: "", page = page)
                 else -> throw IllegalArgumentException("Invalid source: $source")
             }
             val movies = response.results.map { DataMapper.mapMovieResultToMovie(it) }

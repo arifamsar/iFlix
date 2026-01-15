@@ -187,18 +187,19 @@ fun CollapsibleImageScaffold(
     val headerMinHeightPx = with(density) { headerMinHeight.toPx() }
 
     val scrollOffset by remember { derivedStateOf { scrollState.value } }
-    
+
     // Calculate header height based on scroll
     val headerHeightPx by remember {
         derivedStateOf {
             max(headerMinHeightPx, headerMaxHeightPx - scrollOffset)
         }
     }
-    
+
     // Calculate progress (0f = expanded, 1f = collapsed)
     val collapseProgress by remember {
         derivedStateOf {
-            val progress = 1f - (headerHeightPx - headerMinHeightPx) / (headerMaxHeightPx - headerMinHeightPx)
+            val progress =
+                1f - (headerHeightPx - headerMinHeightPx) / (headerMaxHeightPx - headerMinHeightPx)
             progress.coerceIn(0f, 1f)
         }
     }
@@ -252,7 +253,7 @@ fun CollapsibleImageScaffold(
                         modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Crop
                     )
-                    
+
                     // Standard smooth gradient for general readability
                     Box(
                         modifier = Modifier
@@ -288,21 +289,21 @@ fun CollapsibleImageScaffold(
                     )
                 }
             }
-            
+
             // Large Title (Visible when expanded)
             if (collapseProgress < 0.8f) {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(horizontal = 16.dp, vertical = 16.dp)
-                        .padding(bottom = 24.dp), 
+                        .padding(bottom = 24.dp),
                     contentAlignment = Alignment.BottomStart
                 ) {
                     Text(
                         text = title,
                         style = MaterialTheme.typography.headlineMedium,
                         fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface, 
+                        color = MaterialTheme.colorScheme.onSurface,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.graphicsLayer {
@@ -342,28 +343,28 @@ fun CollapsibleImageScaffold(
                         )
                     }
                 },
-                                colors = TopAppBarDefaults.topAppBarColors(
-                                    containerColor = Color.Transparent,
-                                    scrolledContainerColor = Color.Transparent
-                                ),
-                                actions = {
-                                    IconButton(
-                                        onClick = onFavoriteClick,
-                                        colors = IconButtonDefaults.iconButtonColors(
-                                            containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.5f * (1f - collapseProgress)),
-                                            contentColor = if (isFavorite) Color.Red else MaterialTheme.colorScheme.onSurface
-                                        )
-                                    ) {
-                                        Icon(
-                                            imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                                            contentDescription = if (isFavorite) "Remove from favorites" else "Add to favorites",
-                                            tint = if (isFavorite) Color.Red else MaterialTheme.colorScheme.onSurface
-                                        )
-                                    }
-                                },
-                                windowInsets = WindowInsets.statusBars
-                            )
-                        }
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color.Transparent,
+                    scrolledContainerColor = Color.Transparent
+                ),
+                actions = {
+                    IconButton(
+                        onClick = onFavoriteClick,
+                        colors = IconButtonDefaults.iconButtonColors(
+                            containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.5f * (1f - collapseProgress)),
+                            contentColor = if (isFavorite) Color.Red else MaterialTheme.colorScheme.onSurface
+                        )
+                    ) {
+                        Icon(
+                            imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                            contentDescription = if (isFavorite) "Remove from favorites" else "Add to favorites",
+                            tint = if (isFavorite) Color.Red else MaterialTheme.colorScheme.onSurface
+                        )
                     }
-                }
+                },
+                windowInsets = WindowInsets.statusBars
+            )
+        }
+    }
+}
                 

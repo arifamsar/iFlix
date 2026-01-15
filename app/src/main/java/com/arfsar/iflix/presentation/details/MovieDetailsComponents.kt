@@ -390,9 +390,9 @@ fun MovieAdditionalDetails(
                     value = spokenLanguages.joinToString(", ") { it.englishName }
                 )
             }
-            if (imdbId.isNotEmpty()) {
-                InfoRow(label = "IMDb ID", value = imdbId)
-            }
+//            if (imdbId.isNotEmpty()) {
+//                InfoRow(label = "IMDb ID", value = imdbId)
+//            }
         }
     }
 }

@@ -15,4 +15,7 @@ sealed class Destinations {
 
     @Serializable
     data class MovieDetails(val movieId: Int) : Destinations()
+
+    @Serializable
+    data class SearchResult(val genreId: String?, val genreName: String?, val query: String?) : Destinations()
 }

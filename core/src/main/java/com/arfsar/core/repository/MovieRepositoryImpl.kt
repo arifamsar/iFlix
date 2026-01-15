@@ -7,6 +7,7 @@ import com.arfsar.core.source.local.room.MovieDao
 import com.arfsar.core.source.remote.MoviePagingSource
 import com.arfsar.core.source.remote.network.ApiService
 import com.arfsar.core.utils.DataMapper
+import com.arfsar.core.model.Genre
 import com.arfsar.core.model.Movie
 import com.arfsar.core.model.MovieDetails
 import kotlinx.coroutines.flow.Flow
@@ -75,10 +76,31 @@ class MovieRepositoryImpl @Inject constructor(
         }
     }
 
+    override fun discoverMovies(genreId: String): Flow<Result<PagingData<Movie>>> {
+        return try {
+            Pager(
+                config = PagingConfig(pageSize = 20, enablePlaceholders = false),
+                pagingSourceFactory = { MoviePagingSource(apiService, "discover", genreId) }
+            ).flow.map { pagingData -> Result.success(pagingData) }
+        } catch (e: Exception) {
+            flow { emit(Result.failure(e)) }
+        }
+    }
+
     override fun getMovieDetails(movieId: Int): Flow<Result<MovieDetails>> = flow {
         try {
             val response = apiService.getMovieDetails(movieId)
             emit(Result.success(DataMapper.mapMovieDetailsResponseToMovieDetails(response)))
+        } catch (e: Exception) {
+            emit(Result.failure(e))
+        }
+    }
+
+    override fun getMovieGenres(): Flow<Result<List<Genre>>> = flow {
+        try {
+            val response = apiService.getMovieGenres()
+            val genres = response.genres.map { Genre(it.id, it.name) }
+            emit(Result.success(genres))
         } catch (e: Exception) {
             emit(Result.failure(e))
         }

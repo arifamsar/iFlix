@@ -47,9 +47,9 @@ object DataModule {
     @Singleton
     fun provideDatabase(@ApplicationContext context: Context): MovieDatabase {
         return Room.databaseBuilder(
-            context,
-            MovieDatabase::class.java, "movies.db"
-        ).fallbackToDestructiveMigration()
+                context,
+                MovieDatabase::class.java, "movies.db"
+            ).fallbackToDestructiveMigration(false)
         .build()
     }
 
