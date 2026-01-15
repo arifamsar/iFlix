@@ -17,7 +17,7 @@ import com.arfsar.iflix.ui.theme.CardBackground
 import com.arfsar.iflix.ui.theme.DarkSurface
 
 @Composable
-fun SkeletonEffect(): Color {
+fun skeletonEffect(): Color {
     val infiniteTransition = rememberInfiniteTransition(label = "skeleton_transition")
     val alpha by infiniteTransition.animateFloat(
         initialValue = 0.1f,
@@ -36,7 +36,7 @@ fun SkeletonEffect(): Color {
 fun SkeletonMovieCard(
     modifier: Modifier = Modifier
 ) {
-    val backgroundColor = SkeletonEffect()
+    val backgroundColor = skeletonEffect()
     
     Card(
         modifier = modifier
@@ -52,7 +52,7 @@ fun SkeletonMovieCard(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(200.dp)
+                    .height(150.dp)
                     .background(backgroundColor)
             )
             
@@ -97,7 +97,7 @@ fun SkeletonMovieCard(
 fun SkeletonBannerItem(
     modifier: Modifier = Modifier
 ) {
-    val backgroundColor = SkeletonEffect()
+    val backgroundColor = skeletonEffect()
     
     Card(
         modifier = modifier
@@ -168,7 +168,7 @@ fun SkeletonMovieCarousel(
     title: String,
     modifier: Modifier = Modifier
 ) {
-    val backgroundColor = SkeletonEffect()
+    val backgroundColor = skeletonEffect()
     
     Column(modifier = modifier) {
         // Title placeholder
@@ -198,7 +198,7 @@ fun SkeletonMovieCarousel(
 fun SkeletonNowPlayingBanner(
     modifier: Modifier = Modifier
 ) {
-    val backgroundColor = SkeletonEffect()
+    val backgroundColor = skeletonEffect()
     
     Column(modifier = modifier) {
         Box {
