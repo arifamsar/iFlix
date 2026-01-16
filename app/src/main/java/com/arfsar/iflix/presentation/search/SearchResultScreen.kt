@@ -66,6 +66,7 @@ import com.arfsar.core.model.Genre
 import com.arfsar.iflix.presentation.components.CustomSearchBar
 import com.arfsar.iflix.presentation.components.MovieCard
 import com.arfsar.iflix.presentation.components.PullToRefreshContainer
+import com.arfsar.iflix.presentation.components.RecentSearchItem
 import com.arfsar.iflix.presentation.home.HomeContract
 import kotlinx.coroutines.launch
 
@@ -356,7 +357,14 @@ fun SearchResultScreen(
                             onDelete = {
                                 viewModel.deleteHistoryItem(historyItem.query)
                                 scope.launch {
-                                    snackbarHostState.showSnackbar("Removed \"${historyItem.query}\" from history")
+                                    val result = snackbarHostState.showSnackbar(
+                                        message = "Removed \"${historyItem.query}\" from history",
+                                        actionLabel = "Undo",
+                                        duration = SnackbarDuration.Short
+                                    )
+                                    if (result == SnackbarResult.ActionPerformed) {
+                                        viewModel.addToHistory(historyItem.query)
+                                    }
                                 }
                             }
                         )

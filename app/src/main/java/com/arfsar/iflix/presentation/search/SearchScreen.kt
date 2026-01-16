@@ -34,7 +34,9 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -58,6 +60,7 @@ import com.arfsar.core.model.Genre
 import com.arfsar.core.source.local.entity.SearchQueryEntity
 import com.arfsar.iflix.presentation.components.AnimatedSearchBar
 import com.arfsar.iflix.presentation.components.MovieCard
+import com.arfsar.iflix.presentation.components.RecentSearchItem
 import com.arfsar.iflix.presentation.navigation.Destinations
 import kotlinx.coroutines.launch
 
@@ -123,13 +126,19 @@ fun SearchScreen(
                         viewModel.addToHistory(historyQuery)
                         navController.navigate(Destinations.SearchResult(query = historyQuery, genreId = null, genreName = null))
                     },
-                    onDeleteHistory = { historyQuery ->
-                        viewModel.deleteHistoryItem(historyQuery)
-                        scope.launch {
-                            snackbarHostState.showSnackbar("Removed \"$historyQuery\" from history")
-                        }
-                    }
-                )
+                                            onDeleteHistory = { historyQuery ->
+                                                viewModel.deleteHistoryItem(historyQuery)
+                                                scope.launch {
+                                                    val result = snackbarHostState.showSnackbar(
+                                                        message = "Removed \"$historyQuery\" from history",
+                                                        actionLabel = "Undo",
+                                                        duration = SnackbarDuration.Short
+                                                    )
+                                                    if (result == SnackbarResult.ActionPerformed) {
+                                                        viewModel.addToHistory(historyQuery)
+                                                    }
+                                                }
+                                            }                )
             }
         } else {
             // Real-time results
@@ -226,48 +235,6 @@ fun SearchEmptyState(
                     }
                 }
             }
-        }
-    }
-}
-
-@Composable
-fun RecentSearchItem(
-    query: String,
-    onClick: () -> Unit,
-    onDelete: () -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
-            .background(MaterialTheme.colorScheme.surfaceContainerLow)
-            .clickable { onClick() }
-            .padding(horizontal = 12.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Icon(
-            imageVector = Icons.Default.History,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.size(20.dp)
-        )
-        Spacer(modifier = Modifier.width(12.dp))
-        Text(
-            text = query,
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.weight(1f)
-        )
-        IconButton(
-            onClick = onDelete,
-            modifier = Modifier.size(32.dp)
-        ) {
-            Icon(
-                imageVector = Icons.Default.Close,
-                contentDescription = "Delete",
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(18.dp)
-            )
         }
     }
 }

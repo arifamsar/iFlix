@@ -169,9 +169,13 @@ class SearchResultViewModel @Inject constructor(
             _searchQueryInput.value = query
             _searchQuery.value = query
             
-            viewModelScope.launch {
-                addSearchQueryUseCase(query)
-            }
+            addToHistory(query)
+        }
+    }
+
+    fun addToHistory(query: String) {
+        viewModelScope.launch {
+            addSearchQueryUseCase(query)
         }
     }
     
