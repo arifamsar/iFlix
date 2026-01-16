@@ -64,8 +64,17 @@ The project follows **Clean Architecture** principles and is divided into two ma
    git clone https://github.com/yourusername/iFlix.git
    ```
 2. Open the project in Android Studio.
-3. Add your TMDB API Key in `local.properties` (or your preferred config method).
+3. Add your TMDB API Key in `local.properties`:
+   ```properties
+   TMDB_API_KEY=your_api_key_here
+   ```
 4. Build and run the app!
+
+### CI/CD Setup
+To enable GitHub Actions CI/CD:
+1. Go to your repository settings → Secrets and variables → Actions
+2. Add a new repository secret named `TMDB_API_KEY` with your TMDB API key value
+3. Push your changes to trigger the workflow
 
 ## 📄 License
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
