@@ -226,13 +226,13 @@ fun HomeScreen(
                     }
                 }
             }
-            
-            SnackbarHost(
-                hostState = snackbarHostState,
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(bottom = paddingValues.calculateBottomPadding() + 16.dp)
-            )
         }
+
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = paddingValues.calculateBottomPadding() + 16.dp)
+        )
     }
 }
