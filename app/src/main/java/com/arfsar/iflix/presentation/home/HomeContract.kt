@@ -42,4 +42,8 @@ object HomeContract {
         data class ShowError(val message: String) : Event
         object RefreshComplete : Event
     }
+
+    enum class PagingAction {
+        RELOAD, REFRESH, RETRY
+    }
 }

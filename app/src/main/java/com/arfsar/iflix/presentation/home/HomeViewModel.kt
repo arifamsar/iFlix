@@ -12,8 +12,11 @@ import com.arfsar.core.usecase.GetTrendingMoviesUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -33,6 +36,9 @@ class HomeViewModel @Inject constructor(
 
     private val _event = Channel<HomeContract.Event>()
     val event: Flow<HomeContract.Event> = _event.receiveAsFlow()
+
+    private val _pagingAction = MutableSharedFlow<HomeContract.PagingAction>()
+    val pagingAction: SharedFlow<HomeContract.PagingAction> = _pagingAction.asSharedFlow()
 
     // For paging data - all sections now use paging
     val trendingMovies = getTrendingMoviesUseCase()
@@ -115,15 +121,8 @@ class HomeViewModel @Inject constructor(
     }
 
     private fun refresh() {
-        // The isRefreshing state is only used as a flag for pull-to-refresh UI
-        // The actual loading is managed by paging's loadState
-        updateState { copy(isRefreshing = true) }
-
         viewModelScope.launch {
-            // Brief delay to allow the UI to register the refresh gesture
-            kotlinx.coroutines.delay(100)
-            updateState { copy(isRefreshing = false) }
-            _event.trySend(HomeContract.Event.RefreshComplete)
+            _pagingAction.emit(HomeContract.PagingAction.REFRESH)
         }
     }
 
