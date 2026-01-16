@@ -142,10 +142,8 @@ fun CustomSearchBar(
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxWidth()
-                        .padding(12.dp)
                         .background(
                             color = MaterialTheme.colorScheme.surfaceContainerLow,
-                            shape = RoundedCornerShape(16.dp)
                         )
                         .clip(RoundedCornerShape(16.dp))
                 ) {
