@@ -1,8 +1,10 @@
 package com.arfsar.iflix.presentation.navigation
 
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -20,6 +22,8 @@ fun AppNavigation() {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
+    
+    val snackbarHostState = remember { SnackbarHostState() }
 
     // Determine current destination
     val currentDestination = when {
@@ -50,6 +54,7 @@ fun AppNavigation() {
         showTopBar = false, // Disable default top bar for detail screen since we implement our own
         showBrandedAppBar = showBrandedAppBar,
         title = appBarTitle,
+        snackbarHostState = snackbarHostState,
         onNavigate = { destination ->
             navController.navigate(destination) {
                 // Pop up to home and save state to avoid building up a large back stack
@@ -74,7 +79,8 @@ fun AppNavigation() {
             composable<Destinations.Discover> {
                 SearchScreen(
                     navController = navController,
-                    paddingValues = paddingValues
+                    paddingValues = paddingValues,
+                    snackbarHostState = snackbarHostState
                 )
             }
             composable<Destinations.Collections> {
@@ -96,7 +102,8 @@ fun AppNavigation() {
                     onMovieClick = { movieId ->
                         navController.navigate(Destinations.MovieDetails(movieId))
                     },
-                    onBackClick = { navController.navigateUp() }
+                    onBackClick = { navController.navigateUp() },
+                    snackbarHostState = snackbarHostState
                 )
             }
         }

@@ -37,6 +37,10 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.debounce
+
 @HiltViewModel
 class SearchResultViewModel @Inject constructor(
     private val searchMoviesUseCase: SearchMoviesUseCase,
@@ -59,6 +63,9 @@ class SearchResultViewModel @Inject constructor(
 
     private val _searchQuery = MutableStateFlow<String?>(args.query)
     val searchQuery: StateFlow<String?> = _searchQuery.asStateFlow()
+    
+    // Input for live search with debounce
+    private val _searchQueryInput = MutableStateFlow<String?>(args.query)
 
     private val _genres = MutableStateFlow<List<Genre>>(emptyList())
     val genres: StateFlow<List<Genre>> = _genres.asStateFlow()
@@ -113,6 +120,7 @@ class SearchResultViewModel @Inject constructor(
 
     init {
         fetchGenres()
+        setupDebouncedSearch()
     }
 
     private fun fetchGenres() {
@@ -121,6 +129,20 @@ class SearchResultViewModel @Inject constructor(
                 .collect { result ->
                     result.onSuccess { genreList ->
                         _genres.value = genreList
+                    }
+                }
+        }
+    }
+    
+    @OptIn(FlowPreview::class)
+    private fun setupDebouncedSearch() {
+        viewModelScope.launch {
+            _searchQueryInput
+                .debounce(500L)
+                .collectLatest { query ->
+                    // Only update if it's different to prevent redundant reloads
+                    if (_searchQuery.value != query) {
+                        _searchQuery.value = query
                     }
                 }
         }
@@ -136,11 +158,17 @@ class SearchResultViewModel @Inject constructor(
         }
         _selectedGenreIds.value = current
     }
+    
+    fun onQueryChange(query: String) {
+        _searchQueryInput.value = query
+    }
 
     fun onSearch(query: String) {
         if (query.isNotBlank()) {
-            // Don't clear genres, we support combined search
+            // Immediate update for explicit search
+            _searchQueryInput.value = query
             _searchQuery.value = query
+            
             viewModelScope.launch {
                 addSearchQueryUseCase(query)
             }
@@ -160,6 +188,7 @@ class SearchResultViewModel @Inject constructor(
     }
     
     fun clearSearch() {
+        _searchQueryInput.value = null
         _searchQuery.value = null
     }
     

@@ -6,14 +6,19 @@ import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import com.arfsar.core.model.Genre
 import com.arfsar.core.model.Movie
+import com.arfsar.core.source.local.entity.SearchQueryEntity
+import com.arfsar.core.usecase.AddSearchQueryUseCase
+import com.arfsar.core.usecase.DeleteSearchQueryUseCase
 import com.arfsar.core.usecase.DiscoverMoviesUseCase
 import com.arfsar.core.usecase.GetMovieGenresUseCase
+import com.arfsar.core.usecase.GetSearchHistoryUseCase
 import com.arfsar.core.usecase.SearchMoviesUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.flatMapLatest
@@ -21,6 +26,8 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class SearchState(
@@ -41,8 +48,14 @@ sealed class SearchIntent {
 class SearchViewModel @Inject constructor(
     private val searchMoviesUseCase: SearchMoviesUseCase,
     private val discoverMoviesUseCase: DiscoverMoviesUseCase,
-    private val getMovieGenresUseCase: GetMovieGenresUseCase
+    private val getMovieGenresUseCase: GetMovieGenresUseCase,
+    private val getSearchHistoryUseCase: GetSearchHistoryUseCase,
+    private val addSearchQueryUseCase: AddSearchQueryUseCase,
+    private val deleteSearchQueryUseCase: DeleteSearchQueryUseCase
 ) : ViewModel() {
+
+    val searchHistory = getSearchHistoryUseCase()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     private val _searchIntent = MutableStateFlow<SearchIntent>(SearchIntent.None)
 
@@ -107,6 +120,20 @@ class SearchViewModel @Inject constructor(
 
     fun searchMovies(query: String) {
         _searchIntent.value = SearchIntent.TextSearch(query)
+    }
+    
+    fun addToHistory(query: String) {
+        if (query.isNotBlank()) {
+            viewModelScope.launch {
+                addSearchQueryUseCase(query)
+            }
+        }
+    }
+    
+    fun deleteHistoryItem(query: String) {
+        viewModelScope.launch {
+            deleteSearchQueryUseCase(query)
+        }
     }
     
     fun searchByGenre(genre: Genre) {

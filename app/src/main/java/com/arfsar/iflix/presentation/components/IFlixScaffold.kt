@@ -8,6 +8,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -24,6 +26,7 @@ fun IFlixScaffold(
     showBottomBar: Boolean = true,
     showTopBar: Boolean = true,
     showBrandedAppBar: Boolean = false,
+    snackbarHostState: SnackbarHostState? = null,
     onNavigate: ((Destinations) -> Unit)? = null,
     onBackClick: (() -> Unit)? = null,
     content: @Composable (PaddingValues) -> Unit
@@ -70,9 +73,13 @@ fun IFlixScaffold(
                 )
             }
         },
+        snackbarHost = {
+            if (snackbarHostState != null) {
+                SnackbarHost(hostState = snackbarHostState)
+            }
+        },
         containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
         content(paddingValues)
     }
 }
-
