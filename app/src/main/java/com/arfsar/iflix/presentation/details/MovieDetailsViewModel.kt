@@ -16,6 +16,13 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
+
+sealed class DetailsUiEvent {
+    data class ShowSnackbar(val message: String) : DetailsUiEvent()
+}
 
 data class MovieDetailsState(
     val movieDetails: MovieDetails? = null,
@@ -34,6 +41,9 @@ class MovieDetailsViewModel @Inject constructor(
 
     private val _movieDetailsState = MutableStateFlow(MovieDetailsState(isLoading = true))
     val movieDetailsState = _movieDetailsState.asStateFlow()
+
+    private val _uiEvent = MutableSharedFlow<DetailsUiEvent>()
+    val uiEvent: SharedFlow<DetailsUiEvent> = _uiEvent.asSharedFlow()
 
     private val movieId = savedStateHandle.toRoute<Destinations.MovieDetails>().movieId
 
@@ -82,6 +92,9 @@ class MovieDetailsViewModel @Inject constructor(
                     voteAverage = currentDetails.voteAverage
                 )
                 movieRepository.setFavoriteMovie(movie, !isFav)
+                
+                val message = if (!isFav) "Added to favorites" else "Removed from favorites"
+                _uiEvent.emit(DetailsUiEvent.ShowSnackbar(message))
             }
         }
     }

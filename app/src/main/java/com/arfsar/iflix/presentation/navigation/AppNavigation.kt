@@ -114,7 +114,8 @@ fun AppNavigation() {
             composable<Destinations.MovieDetails> {
                 MovieDetailsScreen(
                     paddingValues = PaddingValues(0.dp),
-                    onBackClick = { navController.navigateUp() }
+                    onBackClick = { navController.navigateUp() },
+                    snackbarHostState = snackbarHostState
                 )
             }
             composable<Destinations.SearchResult> {
