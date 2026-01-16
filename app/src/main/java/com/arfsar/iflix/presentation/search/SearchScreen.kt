@@ -61,6 +61,8 @@ import com.arfsar.core.source.local.entity.SearchQueryEntity
 import com.arfsar.iflix.presentation.components.AnimatedSearchBar
 import com.arfsar.iflix.presentation.components.MovieCard
 import com.arfsar.iflix.presentation.components.RecentSearchItem
+import com.arfsar.iflix.presentation.components.SkeletonGenreChip
+import com.arfsar.iflix.presentation.components.SkeletonRecentSearchItem
 import com.arfsar.iflix.presentation.navigation.Destinations
 import kotlinx.coroutines.launch
 
@@ -73,7 +75,6 @@ fun SearchScreen(
 ) {
     val searchState by viewModel.searchState.collectAsStateWithLifecycle()
     val searchResults = viewModel.searchResults.collectAsLazyPagingItems()
-    val searchHistory by viewModel.searchHistory.collectAsStateWithLifecycle()
     var query by remember { mutableStateOf("") }
     
     val scope = rememberCoroutineScope()
@@ -116,7 +117,9 @@ fun SearchScreen(
             } else {
                  SearchEmptyState(
                     genres = searchState.genres,
-                    history = searchHistory,
+                    isGenresLoading = searchState.isGenresLoading,
+                    history = searchState.history,
+                    isHistoryLoading = searchState.isHistoryLoading,
                     onGenreClick = { genre ->
                         navController.navigate(Destinations.SearchResult(genreId = genre.id.toString(), genreName = genre.name, query = null))
                     },
@@ -168,7 +171,9 @@ fun SearchScreen(
 @Composable
 fun SearchEmptyState(
     genres: List<Genre>,
+    isGenresLoading: Boolean,
     history: List<SearchQueryEntity>,
+    isHistoryLoading: Boolean,
     onGenreClick: (Genre) -> Unit,
     onHistoryClick: (String) -> Unit,
     onDeleteHistory: (String) -> Unit
@@ -178,7 +183,7 @@ fun SearchEmptyState(
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        if (history.isNotEmpty()) {
+        if (history.isNotEmpty() || isHistoryLoading) {
             item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -194,16 +199,22 @@ fun SearchEmptyState(
                 }
             }
             
-            items(history) { item ->
-                RecentSearchItem(
-                    query = item.query,
-                    onClick = { onHistoryClick(item.query) },
-                    onDelete = { onDeleteHistory(item.query) }
-                )
+            if (isHistoryLoading) {
+                items(5) {
+                    SkeletonRecentSearchItem()
+                }
+            } else {
+                items(history) { item ->
+                    RecentSearchItem(
+                        query = item.query,
+                        onClick = { onHistoryClick(item.query) },
+                        onDelete = { onDeleteHistory(item.query) }
+                    )
+                }
             }
         }
 
-        if (genres.isNotEmpty()) {
+        if (genres.isNotEmpty() || isGenresLoading) {
             item {
                 Text(
                     text = "Discover by Genre",
@@ -220,18 +231,24 @@ fun SearchEmptyState(
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    genres.forEach { genre ->
-                        FilterChip(
-                            selected = false,
-                            onClick = { onGenreClick(genre) },
-                            label = { Text(genre.name) },
-                            colors = FilterChipDefaults.filterChipColors(
-                                containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                                labelColor = MaterialTheme.colorScheme.onSurface
-                            ),
-                            shape = RoundedCornerShape(12.dp),
-                            border = null
-                        )
+                    if (isGenresLoading) {
+                        repeat(10) {
+                            SkeletonGenreChip()
+                        }
+                    } else {
+                        genres.forEach { genre ->
+                            FilterChip(
+                                selected = false,
+                                onClick = { onGenreClick(genre) },
+                                label = { Text(genre.name) },
+                                colors = FilterChipDefaults.filterChipColors(
+                                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                                    labelColor = MaterialTheme.colorScheme.onSurface
+                                ),
+                                shape = RoundedCornerShape(12.dp),
+                                border = null
+                            )
+                        }
                     }
                 }
             }

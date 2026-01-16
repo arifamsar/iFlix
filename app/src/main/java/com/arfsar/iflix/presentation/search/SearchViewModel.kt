@@ -34,7 +34,10 @@ data class SearchState(
     val query: String = "",
     val error: String? = null,
     val isLoading: Boolean = false,
-    val genres: List<Genre> = emptyList()
+    val isGenresLoading: Boolean = false,
+    val isHistoryLoading: Boolean = false,
+    val genres: List<Genre> = emptyList(),
+    val history: List<SearchQueryEntity> = emptyList()
 )
 
 sealed class SearchIntent {
@@ -54,9 +57,6 @@ class SearchViewModel @Inject constructor(
     private val deleteSearchQueryUseCase: DeleteSearchQueryUseCase
 ) : ViewModel() {
 
-    val searchHistory = getSearchHistoryUseCase()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
-
     private val _searchIntent = MutableStateFlow<SearchIntent>(SearchIntent.None)
 
     private val _searchState = MutableStateFlow(SearchState())
@@ -64,14 +64,31 @@ class SearchViewModel @Inject constructor(
 
     init {
         loadGenres()
+        loadHistory()
     }
 
     private fun loadGenres() {
+        _searchState.value = _searchState.value.copy(isGenresLoading = true)
         getMovieGenresUseCase().onEach { result ->
             result.onSuccess { genres ->
-                _searchState.value = _searchState.value.copy(genres = genres)
+                _searchState.value = _searchState.value.copy(genres = genres, isGenresLoading = false)
+            }.onFailure {
+                _searchState.value = _searchState.value.copy(isGenresLoading = false)
             }
         }.launchIn(viewModelScope)
+    }
+
+    private fun loadHistory() {
+        _searchState.value = _searchState.value.copy(isHistoryLoading = true)
+        viewModelScope.launch {
+            getSearchHistoryUseCase()
+                .collect { history ->
+                    _searchState.value = _searchState.value.copy(
+                        history = history,
+                        isHistoryLoading = false
+                    )
+                }
+        }
     }
 
     // Unwrap Result and expose only PagingData for paging composables
