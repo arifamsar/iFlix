@@ -143,7 +143,7 @@ fun MovieCard(
 @Preview
 @Composable
 private fun MovieCardPrev() {
-    IFlixTheme() {
+    IFlixTheme {
         MovieCard(
             movie = Movie(
                 id = 1,
