@@ -64,7 +64,7 @@ The project follows **Clean Architecture** principles and is divided into two ma
    git clone https://github.com/yourusername/iFlix.git
    ```
 2. Open the project in Android Studio.
-3. Add your TMDB API Key in `core/src/main/java/com/arfsar/core/source/remote/network/AuthInterceptor.kt` (or your preferred config method).
+3. Add your TMDB API Key in `local.properties` (or your preferred config method).
 4. Build and run the app!
 
 ## 📄 License
