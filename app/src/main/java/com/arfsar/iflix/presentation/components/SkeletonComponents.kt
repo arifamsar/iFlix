@@ -195,6 +195,60 @@ fun SkeletonMovieCarousel(
 }
 
 @Composable
+fun SkeletonGenreChip(
+    modifier: Modifier = Modifier
+) {
+    val backgroundColor = skeletonEffect()
+
+    Box(
+        modifier = modifier
+            .width(80.dp)
+            .height(32.dp)
+            .background(backgroundColor, shape = RoundedCornerShape(12.dp))
+    )
+}
+
+@Composable
+fun SkeletonRecentSearchItem(
+    modifier: Modifier = Modifier
+) {
+    val backgroundColor = skeletonEffect()
+
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // Icon placeholder
+        Box(
+            modifier = Modifier
+                .size(24.dp)
+                .background(backgroundColor, shape = androidx.compose.foundation.shape.CircleShape)
+        )
+        
+        Spacer(modifier = Modifier.width(16.dp))
+        
+        // Text placeholder
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .height(16.dp)
+                .background(backgroundColor, shape = RoundedCornerShape(8.dp))
+        )
+        
+        Spacer(modifier = Modifier.width(16.dp))
+        
+        // Delete icon placeholder
+        Box(
+            modifier = Modifier
+                .size(24.dp)
+                .background(backgroundColor, shape = androidx.compose.foundation.shape.CircleShape)
+        )
+    }
+}
+
+@Composable
 fun SkeletonNowPlayingBanner(
     modifier: Modifier = Modifier
 ) {
