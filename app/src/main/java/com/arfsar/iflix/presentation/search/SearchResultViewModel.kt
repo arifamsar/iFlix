@@ -9,14 +9,18 @@ import androidx.paging.cachedIn
 import androidx.paging.filter
 import com.arfsar.core.model.Genre
 import com.arfsar.core.model.Movie
+import com.arfsar.core.source.local.entity.SearchQueryEntity
+import com.arfsar.core.usecase.AddSearchQueryUseCase
+import com.arfsar.core.usecase.ClearSearchHistoryUseCase
+import com.arfsar.core.usecase.DeleteSearchQueryUseCase
 import com.arfsar.core.usecase.DiscoverMoviesUseCase
 import com.arfsar.core.usecase.GetMovieGenresUseCase
+import com.arfsar.core.usecase.GetSearchHistoryUseCase
 import com.arfsar.core.usecase.SearchMoviesUseCase
 import com.arfsar.iflix.presentation.home.HomeContract
 import com.arfsar.iflix.presentation.navigation.Destinations
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -38,6 +42,10 @@ class SearchResultViewModel @Inject constructor(
     private val searchMoviesUseCase: SearchMoviesUseCase,
     private val discoverMoviesUseCase: DiscoverMoviesUseCase,
     private val getMovieGenresUseCase: GetMovieGenresUseCase,
+    private val getSearchHistoryUseCase: GetSearchHistoryUseCase,
+    private val addSearchQueryUseCase: AddSearchQueryUseCase,
+    private val deleteSearchQueryUseCase: DeleteSearchQueryUseCase,
+    private val clearSearchHistoryUseCase: ClearSearchHistoryUseCase,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -55,6 +63,9 @@ class SearchResultViewModel @Inject constructor(
     private val _genres = MutableStateFlow<List<Genre>>(emptyList())
     val genres: StateFlow<List<Genre>> = _genres.asStateFlow()
     
+    val searchHistory: StateFlow<List<SearchQueryEntity>> = getSearchHistoryUseCase()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
     // Paging Action Mediator
     private val _pagingAction = MutableSharedFlow<HomeContract.PagingAction>()
     val pagingAction: SharedFlow<HomeContract.PagingAction> = _pagingAction.asSharedFlow()
@@ -130,6 +141,21 @@ class SearchResultViewModel @Inject constructor(
         if (query.isNotBlank()) {
             // Don't clear genres, we support combined search
             _searchQuery.value = query
+            viewModelScope.launch {
+                addSearchQueryUseCase(query)
+            }
+        }
+    }
+    
+    fun deleteHistoryItem(query: String) {
+        viewModelScope.launch {
+            deleteSearchQueryUseCase(query)
+        }
+    }
+    
+    fun clearHistory() {
+        viewModelScope.launch {
+            clearSearchHistoryUseCase()
         }
     }
     

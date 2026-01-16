@@ -14,6 +14,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -21,6 +23,8 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.LocalMovies
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.CircularProgressIndicator
@@ -29,6 +33,7 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SearchBar
@@ -117,6 +122,8 @@ fun SearchResultScreen(
         }
     }
     
+    val searchHistory by viewModel.searchHistory.collectAsStateWithLifecycle()
+
     // Back handler for search
     BackHandler(enabled = isSearchActive) {
         isSearchActive = false
@@ -158,7 +165,52 @@ fun SearchResultScreen(
                     onExpandedChange = { isSearchActive = it },
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    // Search suggestions or history could go here
+                    LazyColumn(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentPadding = PaddingValues(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        items(searchHistory) { historyItem ->
+                            ListItem(
+                                headlineContent = { Text(historyItem.query) },
+                                leadingContent = { Icon(Icons.Default.History, contentDescription = null) },
+                                trailingContent = {
+                                    IconButton(onClick = { viewModel.deleteHistoryItem(historyItem.query) }) {
+                                        Icon(Icons.Default.Delete, contentDescription = "Delete")
+                                    }
+                                },
+                                modifier = Modifier
+                                    .clickable {
+                                        currentQuery = historyItem.query
+                                        viewModel.onSearch(historyItem.query)
+                                        isSearchActive = false
+                                    }
+                                    .fillMaxWidth()
+                            )
+                        }
+                        if (searchHistory.isNotEmpty()) {
+                            item {
+                                ListItem(
+                                    headlineContent = { 
+                                        Text(
+                                            "Clear all history", 
+                                            color = MaterialTheme.colorScheme.error
+                                        ) 
+                                    },
+                                    leadingContent = { 
+                                        Icon(
+                                            Icons.Default.Delete, 
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.error
+                                        ) 
+                                    },
+                                    modifier = Modifier
+                                        .clickable { viewModel.clearHistory() }
+                                        .fillMaxWidth()
+                                )
+                            }
+                        }
+                    }
                 }
             } else {
                 TopAppBar(

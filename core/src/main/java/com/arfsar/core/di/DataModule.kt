@@ -59,6 +59,11 @@ object DataModule {
     }
 
     @Provides
+    fun provideSearchQueryDao(database: MovieDatabase): com.arfsar.core.source.local.room.SearchQueryDao {
+        return database.searchQueryDao()
+    }
+
+    @Provides
     @Singleton
     fun provideAuthInterceptor(): AuthInterceptor {
         return AuthInterceptor()
