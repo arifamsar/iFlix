@@ -61,7 +61,7 @@ The project follows **Clean Architecture** principles and is divided into two ma
 ### Installation
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/iFlix.git
+   git clone https://github.com/arifamsar/iFlix.git
    ```
 2. Open the project in Android Studio.
 3. Add your TMDB API Key in `local.properties`:
