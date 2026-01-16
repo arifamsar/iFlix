@@ -1,5 +1,10 @@
 package com.arfsar.iflix.presentation.navigation
 
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
@@ -69,7 +74,22 @@ fun AppNavigation() {
             { navController.navigateUp() }
         } else null
     ) { paddingValues ->
-        NavHost(navController = navController, startDestination = Destinations.Home) {
+        NavHost(
+            navController = navController, 
+            startDestination = Destinations.Home,
+            enterTransition = {
+                slideInHorizontally(initialOffsetX = { 1000 }, animationSpec = tween(300)) + fadeIn(animationSpec = tween(300))
+            },
+            exitTransition = {
+                slideOutHorizontally(targetOffsetX = { -1000 }, animationSpec = tween(300)) + fadeOut(animationSpec = tween(300))
+            },
+            popEnterTransition = {
+                slideInHorizontally(initialOffsetX = { -1000 }, animationSpec = tween(300)) + fadeIn(animationSpec = tween(300))
+            },
+            popExitTransition = {
+                slideOutHorizontally(targetOffsetX = { 1000 }, animationSpec = tween(300)) + fadeOut(animationSpec = tween(300))
+            }
+        ) {
             composable<Destinations.Home> {
                 HomeScreen(
                     navController = navController,
