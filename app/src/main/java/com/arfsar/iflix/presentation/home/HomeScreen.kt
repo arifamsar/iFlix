@@ -39,7 +39,6 @@ fun HomeScreen(
     paddingValues: PaddingValues,
     viewModel: HomeViewModel = hiltViewModel()
 ) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val trendingMovies = viewModel.trendingMovies.collectAsLazyPagingItems()
     val nowPlayingMovies = viewModel.nowPlayingMovies.collectAsLazyPagingItems()
     val popularMovies = viewModel.popularMovies.collectAsLazyPagingItems()
