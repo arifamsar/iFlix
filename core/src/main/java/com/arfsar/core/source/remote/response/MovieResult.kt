@@ -16,5 +16,7 @@ data class MovieResult(
     @SerialName("release_date")
     val releaseDate: String?,
     @SerialName("vote_average")
-    val voteAverage: Double?
+    val voteAverage: Double?,
+    @SerialName("genre_ids")
+    val genreIds: List<Int>? = null
 )

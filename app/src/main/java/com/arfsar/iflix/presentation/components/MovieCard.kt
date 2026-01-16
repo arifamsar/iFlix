@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -76,6 +77,7 @@ fun MovieCard(
                     contentDescription = movie.title,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
+                        .fillMaxHeight()
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp))
                 )

@@ -20,8 +20,6 @@ import androidx.compose.ui.unit.sp
 import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
 import com.arfsar.core.model.Movie
-import com.arfsar.iflix.presentation.components.MovieCardShimmer
-import com.arfsar.iflix.presentation.components.SkeletonMovieCarousel
 
 @Composable
 fun MovieCarousel(

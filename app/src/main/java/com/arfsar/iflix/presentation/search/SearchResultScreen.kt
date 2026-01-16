@@ -18,6 +18,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.LocalMovies
 import androidx.compose.material.icons.filled.Search
@@ -66,7 +68,7 @@ fun SearchResultScreen(
 ) {
     val searchResults = viewModel.searchResults.collectAsLazyPagingItems()
     val genres by viewModel.genres.collectAsStateWithLifecycle()
-    val selectedGenreId by viewModel.selectedGenreId.collectAsStateWithLifecycle()
+    val selectedGenreIds by viewModel.selectedGenreIds.collectAsStateWithLifecycle()
     val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
     val title by viewModel.title.collectAsStateWithLifecycle()
 
@@ -79,6 +81,8 @@ fun SearchResultScreen(
     LaunchedEffect(searchQuery) {
         if (!searchQuery.isNullOrBlank()) {
             currentQuery = searchQuery ?: ""
+        } else {
+            currentQuery = ""
         }
     }
 
@@ -140,7 +144,10 @@ fun SearchResultScreen(
                             },
                             trailingIcon = {
                                 if (currentQuery.isNotEmpty()) {
-                                    IconButton(onClick = { currentQuery = "" }) {
+                                    IconButton(onClick = { 
+                                        currentQuery = ""
+                                        viewModel.clearSearch()
+                                    }) {
                                         Icon(Icons.Default.Close, contentDescription = "Clear")
                                     }
                                 }
@@ -206,8 +213,9 @@ fun SearchResultScreen(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         items(genres) { genre ->
+                            val isSelected = selectedGenreIds.contains(genre.id.toString())
                             FilterChip(
-                                selected = genre.id.toString() == selectedGenreId,
+                                selected = isSelected,
                                 onClick = { viewModel.onGenreSelected(genre) },
                                 label = { Text(genre.name) },
                                 colors = FilterChipDefaults.filterChipColors(
@@ -217,7 +225,16 @@ fun SearchResultScreen(
                                     selectedLabelColor = MaterialTheme.colorScheme.onPrimary
                                 ),
                                 shape = RoundedCornerShape(16.dp),
-                                border = null
+                                border = null,
+                                leadingIcon = if (isSelected) {
+                                    {
+                                        Icon(
+                                            imageVector = Icons.Default.Check,
+                                            contentDescription = "Selected",
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                    }
+                                } else null
                             )
                         }
                     }

@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
+import androidx.paging.filter
 import com.arfsar.core.model.Genre
 import com.arfsar.core.model.Movie
 import com.arfsar.core.usecase.DiscoverMoviesUseCase
@@ -43,8 +44,10 @@ class SearchResultViewModel @Inject constructor(
     private val args = savedStateHandle.toRoute<Destinations.SearchResult>()
     
     // States
-    private val _selectedGenreId = MutableStateFlow<String?>(args.genreId)
-    val selectedGenreId: StateFlow<String?> = _selectedGenreId.asStateFlow()
+    private val _selectedGenreIds = MutableStateFlow<Set<String>>(
+        args.genreId?.let { setOf(it) } ?: emptySet()
+    )
+    val selectedGenreIds: StateFlow<Set<String>> = _selectedGenreIds.asStateFlow()
 
     private val _searchQuery = MutableStateFlow<String?>(args.query)
     val searchQuery: StateFlow<String?> = _searchQuery.asStateFlow()
@@ -57,24 +60,42 @@ class SearchResultViewModel @Inject constructor(
     val pagingAction: SharedFlow<HomeContract.PagingAction> = _pagingAction.asSharedFlow()
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val searchResults: Flow<PagingData<Movie>> = combine(_selectedGenreId, _searchQuery) { genreId, query ->
-        Pair(genreId, query)
-    }.flatMapLatest { (genreId, query) ->
+    val searchResults: Flow<PagingData<Movie>> = combine(_selectedGenreIds, _searchQuery) { genreIds, query ->
+        Pair(genreIds, query)
+    }.flatMapLatest { (genreIds, query) ->
         if (!query.isNullOrBlank()) {
-            searchMoviesUseCase(query)
-        } else if (genreId != null) {
-            discoverMoviesUseCase(genreId)
+            searchMoviesUseCase(query).map { result ->
+                val pagingData = result.getOrNull() ?: PagingData.empty()
+                if (genreIds.isNotEmpty()) {
+                    pagingData.filter { movie ->
+                        // Client-side filtering: Check if movie has ALL selected genres
+                        val selectedIdsInt = genreIds.mapNotNull { it.toIntOrNull() }
+                        movie.genreIds.containsAll(selectedIdsInt)
+                    }
+                } else {
+                    pagingData
+                }
+            }
+        } else if (genreIds.isNotEmpty()) {
+            // Discover with multiple genres (comma separated for AND logic)
+            val genreQuery = genreIds.joinToString(",")
+            discoverMoviesUseCase(genreQuery).map { result ->
+                result.getOrNull() ?: PagingData.empty()
+            }
         } else {
-            flowOf(Result.success(PagingData.empty()))
+            flowOf(PagingData.empty())
         }
-    }.map { result ->
-        result.getOrNull() ?: PagingData.empty()
     }.cachedIn(viewModelScope)
 
-    val title: StateFlow<String> = combine(_selectedGenreId, _searchQuery, _genres) { genreId, query, genreList ->
+    val title: StateFlow<String> = combine(_selectedGenreIds, _searchQuery, _genres) { genreIds, query, genreList ->
         when {
             !query.isNullOrBlank() -> "Results for \"$query\""
-            genreId != null -> genreList.find { it.id.toString() == genreId }?.name ?: args.genreName ?: "Movies"
+            genreIds.isNotEmpty() -> {
+                val names = genreIds.mapNotNull { id -> 
+                    genreList.find { it.id.toString() == id }?.name 
+                }
+                if (names.isNotEmpty()) names.joinToString(", ") else "Movies"
+            }
             else -> "Movies"
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "Movies")
@@ -95,15 +116,25 @@ class SearchResultViewModel @Inject constructor(
     }
 
     fun onGenreSelected(genre: Genre) {
-        _searchQuery.value = null
-        _selectedGenreId.value = genre.id.toString()
+        val current = _selectedGenreIds.value.toMutableSet()
+        val id = genre.id.toString()
+        if (current.contains(id)) {
+            current.remove(id)
+        } else {
+            current.add(id)
+        }
+        _selectedGenreIds.value = current
     }
 
     fun onSearch(query: String) {
         if (query.isNotBlank()) {
-            _selectedGenreId.value = null
+            // Don't clear genres, we support combined search
             _searchQuery.value = query
         }
+    }
+    
+    fun clearSearch() {
+        _searchQuery.value = null
     }
     
     fun refresh() {

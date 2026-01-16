@@ -33,7 +33,8 @@ object DataMapper {
             posterPath = entity.posterPath,
             backdropPath = entity.backdropPath,
             releaseDate = entity.releaseDate,
-            voteAverage = entity.voteAverage
+            voteAverage = entity.voteAverage,
+            genreIds = emptyList() // Local cache doesn't store genre IDs for filtering
         )
     }
 
@@ -44,7 +45,8 @@ object DataMapper {
             posterPath = movieResult.posterPath ?: "",
             backdropPath = movieResult.backdropPath ?: "",
             releaseDate = movieResult.releaseDate ?: "",
-            voteAverage = movieResult.voteAverage ?: 0.0
+            voteAverage = movieResult.voteAverage ?: 0.0,
+            genreIds = movieResult.genreIds ?: emptyList()
         )
     }
 
