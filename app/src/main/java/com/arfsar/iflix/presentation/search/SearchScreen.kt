@@ -19,7 +19,9 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
@@ -36,11 +38,13 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
+import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.arfsar.core.model.Genre
 import com.arfsar.core.source.local.entity.SearchQueryEntity
 import com.arfsar.iflix.presentation.components.AnimatedSearchBar
 import com.arfsar.iflix.presentation.components.MovieCard
+import com.arfsar.iflix.presentation.components.PullToRefreshContainer
 import com.arfsar.iflix.presentation.components.RecentSearchItem
 import com.arfsar.iflix.presentation.components.SkeletonGenreChip
 import com.arfsar.iflix.presentation.components.SkeletonRecentSearchItem
@@ -60,108 +64,142 @@ fun SearchScreen(
 
     val scope = rememberCoroutineScope()
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(paddingValues)
-    ) {
-        // Search Bar
-        Box(modifier = Modifier.padding(16.dp)) {
-            AnimatedSearchBar(
-                query = query,
-                onQueryChange = {
-                    query = it
-                    viewModel.searchMovies(it)
-                },
-                onSearch = {
-                    if (query.isNotBlank()) {
-                        viewModel.addToHistory(query)
-                        navController.navigate(
-                            Destinations.SearchResult(
-                                query = query,
-                                genreId = null,
-                                genreName = null
+    Box(modifier = Modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+        ) {
+            // Search Bar
+            Box(modifier = Modifier.padding(16.dp)) {
+                AnimatedSearchBar(
+                    query = query,
+                    onQueryChange = {
+                        query = it
+                        viewModel.searchMovies(it)
+                    },
+                    onSearch = {
+                        if (query.isNotBlank()) {
+                            viewModel.addToHistory(query)
+                            navController.navigate(
+                                Destinations.SearchResult(
+                                    query = query,
+                                    genreId = null,
+                                    genreName = null
+                                )
                             )
-                        )
+                        }
+                    },
+                    onClearClick = {
+                        query = ""
+                        viewModel.searchMovies("")
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+
+            val isRefreshing = if (query.isBlank()) {
+                searchState.isGenresLoading || searchState.isHistoryLoading
+            } else {
+                searchResults.loadState.refresh is LoadState.Loading
+            }
+
+            PullToRefreshContainer(
+                isRefreshing = isRefreshing,
+                onRefresh = {
+                    if (query.isBlank()) {
+                        viewModel.refresh()
+                    } else {
+                        searchResults.refresh()
                     }
                 },
-                onClearClick = {
-                    query = ""
-                    viewModel.searchMovies("")
-                },
-                modifier = Modifier.fillMaxWidth()
-            )
-        }
-
-        if (query.isBlank()) {
-            if (searchState.isLoading) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator()
-                }
-            } else {
-                SearchEmptyState(
-                    genres = searchState.genres,
-                    isGenresLoading = searchState.isGenresLoading,
-                    history = searchState.history,
-                    isHistoryLoading = searchState.isHistoryLoading,
-                    onGenreClick = { genre ->
-                        navController.navigate(
-                            Destinations.SearchResult(
-                                genreId = genre.id.toString(),
-                                genreName = genre.name,
-                                query = null
-                            )
-                        )
-                    },
-                    onHistoryClick = { historyQuery ->
-                        query = historyQuery
-                        viewModel.searchMovies(historyQuery)
-                        viewModel.addToHistory(historyQuery)
-                        navController.navigate(
-                            Destinations.SearchResult(
-                                query = historyQuery,
-                                genreId = null,
-                                genreName = null
-                            )
-                        )
-                    },
-                    onDeleteHistory = { historyQuery ->
-                        viewModel.deleteHistoryItem(historyQuery)
-                        scope.launch {
-                            val result = snackbarHostState.showSnackbar(
-                                message = "Removed \"$historyQuery\" from history",
-                                actionLabel = "Undo",
-                                duration = SnackbarDuration.Short
-                            )
-                            if (result == SnackbarResult.ActionPerformed) {
-                                viewModel.addToHistory(historyQuery)
-                            }
-                        }
-                    })
-            }
-        } else {
-            // Real-time results
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(2),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier.fillMaxSize()
             ) {
-                items(searchResults.itemCount) { index ->
-                    searchResults[index]?.let { movie ->
-                        MovieCard(
-                            movie = movie,
-                            onMovieClick = { movieId ->
-                                navController.navigate(Destinations.MovieDetails(movieId))
+                if (query.isBlank()) {
+                    if (searchState.isLoading) {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator()
+                        }
+                    } else {
+                        SearchEmptyState(
+                            genres = searchState.genres,
+                            isGenresLoading = searchState.isGenresLoading,
+                            history = searchState.history,
+                            isHistoryLoading = searchState.isHistoryLoading,
+                            onGenreClick = { genre ->
+                                navController.navigate(
+                                    Destinations.SearchResult(
+                                        genreId = genre.id.toString(),
+                                        genreName = genre.name,
+                                        query = null
+                                    )
+                                )
+                            },
+                            onHistoryClick = { historyQuery ->
+                                query = historyQuery
+                                viewModel.searchMovies(historyQuery)
+                                viewModel.addToHistory(historyQuery)
+                                navController.navigate(
+                                    Destinations.SearchResult(
+                                        query = historyQuery,
+                                        genreId = null,
+                                        genreName = null
+                                    )
+                                )
+                            },
+                            onDeleteHistory = { historyQuery ->
+                                viewModel.deleteHistoryItem(historyQuery)
+                                scope.launch {
+                                    val result = snackbarHostState.showSnackbar(
+                                        message = "Removed \"$historyQuery\" from history",
+                                        actionLabel = "Undo",
+                                        duration = SnackbarDuration.Short
+                                    )
+                                    if (result == SnackbarResult.ActionPerformed) {
+                                        viewModel.addToHistory(historyQuery)
+                                    }
+                                }
+                            })
+                    }
+                } else {
+                    // Real-time results
+                    LazyVerticalGrid(
+                        columns = GridCells.Fixed(2),
+                        contentPadding = PaddingValues(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        items(searchResults.itemCount) { index ->
+                            searchResults[index]?.let { movie ->
+                                MovieCard(
+                                    movie = movie,
+                                    onMovieClick = { movieId ->
+                                        navController.navigate(Destinations.MovieDetails(movieId))
+                                    }
+                                )
                             }
-                        )
+                        }
                     }
                 }
             }
+        }
+
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 16.dp)
+        ) { data ->
+            Snackbar(
+                snackbarData = data,
+                containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                actionColor = MaterialTheme.colorScheme.primary
+            )
         }
     }
 }
