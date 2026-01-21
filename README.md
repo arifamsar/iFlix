@@ -45,12 +45,6 @@ The project follows **Clean Architecture** principles and is divided into two ma
 - **Navigation:** Type-safe navigation with custom slide/fade transitions.
 - **Components:** Reusable UI elements like `CustomSearchBar`, `MovieCarousel`, and `IFlixScaffold`.
 
-## 📸 Screenshots
-
-| Home & Discovery | Search & Results | Details & Favorites |
-|---|---|---|
-| ![Home](images/iFlix.jpg) | ![Search](images/iFlix.jpg) | ![Details](images/iFlix.jpg) |
-
 ## 🏁 Getting Started
 
 ### Prerequisites
